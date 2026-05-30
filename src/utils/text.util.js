@@ -1,32 +1,36 @@
-const { PANEL_HEIGHT, VIDEO_AREA_HEIGHT, TARGET_WIDTH } = require('../constants/video.constants');
+const {
+  PANEL_HEIGHT,
+  VIDEO_AREA_HEIGHT,
+  TARGET_WIDTH,
+} = require("../constants/video.constants");
 
 const PANEL_PADDING_X = 60; // px each side
 const USABLE_WIDTH = TARGET_WIDTH - PANEL_PADDING_X * 2; // 960px
 
 // Strip extra whitespace, limit to maxLength
 function normalizeProductName(raw, maxLength = 80) {
-  return raw.trim().replace(/\s+/g, ' ').slice(0, maxLength);
+  return raw.trim().replace(/\s+/g, " ").slice(0, maxLength);
 }
 
 // Escape special characters for use inside FFmpeg drawtext text='...'
 // Must be called on individual line strings (before joining with \n)
 function escapeDrawtext(str) {
   return str
-    .replace(/\\/g, '\\\\')
+    .replace(/\\/g, "\\\\")
     .replace(/'/g, "\\'")
-    .replace(/:/g, '\\:')
-    .replace(/%/g, '%%');
+    .replace(/:/g, "\\:")
+    .replace(/%/g, "%%");
 }
 
 // Wrap text into lines at word boundaries; each line ≤ maxChars
 function wrapText(text, maxChars) {
-  const words = text.split(' ');
+  const words = text.split(" ");
   const lines = [];
-  let current = '';
+  let current = "";
 
   for (const word of words) {
     const candidate = current ? `${current} ${word}` : word;
-    if (candidate.length > maxChars && current !== '') {
+    if (candidate.length > maxChars && current !== "") {
       lines.push(current);
       current = word;
     } else {
@@ -70,8 +74,9 @@ function calculateTextLayout(text) {
 function buildProductNameFilter(productName, fontOpt) {
   const { fontSize, lines } = calculateTextLayout(productName);
 
-  const shadowOpt = 'shadowx=3:shadowy=4:shadowcolor=black@0.55';
-  const baseOpt = `${fontOpt}fontsize=${fontSize}:fontcolor=white:${shadowOpt}`;
+  const shadowOpt =
+    "borderw=5:bordercolor=black@0.95:shadowx=3:shadowy=5:shadowcolor=black@0.55";
+  const baseOpt = `${fontOpt}fontsize=${fontSize}:fontcolor=0xFFE61F:${shadowOpt}`;
 
   const panelTop = VIDEO_AREA_HEIGHT;
   const panelMid = panelTop + PANEL_HEIGHT / 2; // 1690
