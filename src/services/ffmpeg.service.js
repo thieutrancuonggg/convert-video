@@ -93,6 +93,21 @@ function evenFloor(n) {
   return Math.floor(n / 2) * 2;
 }
 
+function buildPulseZoomFilters(variant) {
+  const amount = variant.pulseZoom || 0.035;
+  const period = variant.pulsePeriod || 6;
+  const duration = variant.pulseDuration || 1.25;
+  const offsetMap = { v1: 0.4, v2: 1.6, v3: 2.8 };
+  const offset = variant.pulseOffset ?? offsetMap[variant.id] ?? 0;
+  const phase = `mod(t+${offset}\\,${period})`;
+  const zoomExpr = `if(lt(${phase}\\,${duration})\\,1+${amount}*sin(PI*${phase}/${duration})\\,1)`;
+
+  return [
+    `scale=w='trunc(${TARGET_WIDTH}*(${zoomExpr})/2)*2':h='trunc(${VIDEO_AREA_HEIGHT}*(${zoomExpr})/2)*2':eval=frame`,
+    `crop=${TARGET_WIDTH}:${VIDEO_AREA_HEIGHT}:(iw-ow)/2:(ih-oh)/2`,
+  ];
+}
+
 // ─── Panel background filters ──────────────────────────────────────────────────
 // Returns the array of filter strings that paint the bottom panel area.
 // Called after the video has been padded to TARGET_HEIGHT.
@@ -209,19 +224,22 @@ function buildVideoFilter(videoInfo, variant, productName) {
   // ── 3. Colour grading (applied to video area only, before pad) ──────────────
   filters.push(`eq=brightness=${brightness}:contrast=${contrast}`);
 
-  // ── 4. Pad to full output height; bottom 460px becomes the panel area ────────
+  // ── 4. Occasional pulse zoom on the video area only ─────────────────────────
+  filters.push(...buildPulseZoomFilters(variant));
+
+  // ── 5. Pad to full output height; bottom 460px becomes the panel area ────────
   filters.push(`pad=${TARGET_WIDTH}:${TARGET_HEIGHT}:0:0:color=0x060D1F`);
 
-  // ── 5. Paint the panel background (gradient simulation + separator) ──────────
+  // ── 6. Paint the panel background (gradient simulation + separator) ──────────
   filters.push(...buildPanelBackgroundFilters());
 
-  // ── 6. Speed ─────────────────────────────────────────────────────────────────
+  // ── 7. Speed ─────────────────────────────────────────────────────────────────
   if (speed !== 1.0) {
     const pts = (1 / speed).toFixed(6);
     filters.push(`setpts=${pts}*PTS`);
   }
 
-  // ── 7. Hook text: keep INSIDE the video area (0 – VIDEO_AREA_HEIGHT) ─────────
+  // ── 8. Hook text: keep INSIDE the video area (0 – VIDEO_AREA_HEIGHT) ─────────
   const fontPath = findSystemFont();
   const fontOpt = fontPath ? `fontfile=${escapeFontPath(fontPath)}:` : "";
   // Bottom hook sits 130px above the panel, not 130px above the frame bottom
@@ -238,11 +256,11 @@ function buildVideoFilter(videoInfo, variant, productName) {
       `enable='${enable}'`,
   );
 
-  // ── 8. Product name in bottom panel ──────────────────────────────────────────
+  // ── 9. Product name in bottom panel ──────────────────────────────────────────
   // buildProductNameFilter returns 1 or 2 drawtext filters already joined with ','
   filters.push(buildProductNameFilter(productName, fontOpt));
 
-  // ── 9. Panel animations (shine streaks + icon badges) ────────────────────────
+  // ── 10. Panel animations (shine streaks + icon badges) ───────────────────────
   const iconFontPath = findIconFont();
   const iconFontOpt = iconFontPath
     ? `fontfile=${escapeFontPath(iconFontPath)}:`
