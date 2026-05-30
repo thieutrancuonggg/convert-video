@@ -108,6 +108,206 @@ function buildPulseZoomFilters(variant) {
   ];
 }
 
+function pickRandom(list) {
+  return list[Math.floor(Math.random() * list.length)];
+}
+
+function shortProductName(productName) {
+  return productName.trim().replace(/\s+/g, " ").slice(0, 34);
+}
+
+const UI_MARGIN_X = 90;
+const UI_WIDTH = TARGET_WIDTH - UI_MARGIN_X * 2;
+const YELLOW = "0xFFE61F";
+const TEXT_WHITE = "0xFFFFFF";
+
+function buildRandomHookText(variant, productName) {
+  const product = shortProductName(productName);
+  const templates = {
+    v1: [
+      "XEM TRƯỚC KHI MUA",
+      "ĐỪNG LƯỚT QUA MẪU NÀY",
+      `${product} CÓ ĐÁNG MUA?`,
+      "CHECK NHANH TRƯỚC KHI CHỐT",
+    ],
+    v2: [
+      "TEST NHANH TRONG 60S",
+      "MÌNH SOI KỸ MẪU NÀY",
+      "XEM XONG RỒI HÃY CHỐT",
+      "ẢNH SHOP VS THỰC TẾ?",
+    ],
+    v3: [
+      "CÓ NÊN MUA KHÔNG?",
+      "3 ĐIỂM CẦN BIẾT",
+      "MẪU NÀY HỢP AI?",
+      "ĐỪNG MUA VỘI",
+    ],
+  };
+
+  return pickRandom(templates[variant.id] || templates.v1);
+}
+
+function wrapDisplayText(text, maxChars) {
+  const words = text.trim().replace(/\s+/g, " ").split(" ");
+  const lines = [];
+  let current = "";
+
+  for (const word of words) {
+    const next = current ? `${current} ${word}` : word;
+    if (next.length > maxChars && current) {
+      lines.push(current);
+      current = word;
+    } else {
+      current = next;
+    }
+  }
+
+  if (current) lines.push(current);
+  return lines.slice(0, 2);
+}
+
+function buildTextLines(
+  lines,
+  { fontOpt, fontSize, colors, x, y, lineGap, enable },
+) {
+  return lines.map((line, index) => {
+    const lineY = y + index * (fontSize + lineGap);
+    const color = colors[index] || colors[colors.length - 1];
+    return (
+      `drawtext=${fontOpt}` +
+      `text='${escapeDrawtext(line)}':` +
+      `fontsize=${fontSize}:fontcolor=${color}:` +
+      `borderw=4:bordercolor=black@0.92:` +
+      `shadowx=2:shadowy=4:shadowcolor=black@0.55:` +
+      `x=${x}:y=${lineY}:enable='${enable}'`
+    );
+  });
+}
+
+function buildHookFilters(hookText, hookY, hookDuration, fontOpt) {
+  const lines = wrapDisplayText(hookText.toUpperCase(), 24);
+  const fontSize = lines.length > 1 ? 48 : 54;
+  const lineGap = 8;
+  const boxX = UI_MARGIN_X;
+  const boxW = UI_WIDTH;
+  const boxH = lines.length * fontSize + (lines.length - 1) * lineGap + 40;
+  const enable = `between(t,0,${hookDuration})`;
+
+  return [
+    `drawbox=x=${boxX}:y=${hookY - 20}:w=${boxW}:h=${boxH}:color=black@0.68:t=fill:enable='${enable}'`,
+    `drawbox=x=${boxX}:y=${hookY - 20}:w=${boxW}:h=6:color=${YELLOW}@1:t=fill:enable='${enable}'`,
+    `drawbox=x=${boxX}:y=${hookY - 20 + boxH - 6}:w=${boxW}:h=6:color=${YELLOW}@1:t=fill:enable='${enable}'`,
+    ...buildTextLines(lines, {
+      fontOpt,
+      fontSize,
+      colors: [YELLOW, TEXT_WHITE],
+      x: "(w-tw)/2",
+      y: hookY,
+      lineGap,
+      enable,
+    }),
+  ];
+}
+
+function buildCaptionTimelineFilters(duration, variant, productName, fontOpt) {
+  const product = shortProductName(productName);
+  const captionY = variant.hookPosition === "bottom" ? 280 : 1040;
+  const captionBoxX = UI_MARGIN_X;
+  const captionBoxW = UI_WIDTH;
+  const captionBoxH = 142;
+  const captions = [
+    ["SOI NHANH", product.toUpperCase()],
+    ["FORM / CHẤT LIỆU", "XEM KỸ TRƯỚC KHI MUA"],
+    ["ĐIỂM ĐÁNG CHÚ Ý", "KHÔNG CHỈ NHÌN ẢNH SHOP"],
+    ["HỢP AI?", "CHỐT SAU KHI XEM HẾT"],
+  ];
+
+  const start = Math.min(2.35, Math.max(duration * 0.14, 1.4));
+  const step = Math.max(2.15, Math.min(3.0, duration / 5));
+  const hold = Math.max(1.6, Math.min(2.25, step - 0.3));
+
+  return captions.flatMap((lines, index) => {
+    const from = parseFloat((start + index * step).toFixed(2));
+    const to = parseFloat((from + hold).toFixed(2));
+    if (to > duration - 2.65) return [];
+
+    const enable = `between(t,${from},${to})`;
+
+    return [
+      `drawbox=x=${captionBoxX}:y=${captionY - 18}:w=${captionBoxW}:h=${captionBoxH}:color=black@0.58:t=fill:enable='${enable}'`,
+      `drawbox=x=${captionBoxX}:y=${captionY - 18}:w=${captionBoxW}:h=3:color=0xFFFFFF@0.28:t=fill:enable='${enable}'`,
+      `drawbox=x=${captionBoxX}:y=${captionY - 18}:w=9:h=${captionBoxH}:color=${YELLOW}@0.95:t=fill:enable='${enable}'`,
+      ...buildTextLines(lines, {
+        fontOpt,
+        fontSize: index === 0 ? 42 : 40,
+        colors: [YELLOW, TEXT_WHITE],
+        x: "(w-tw)/2",
+        y: captionY,
+        lineGap: 8,
+        enable,
+      }),
+    ];
+  });
+}
+
+function buildBadgeAndProgressFilters(duration, fontOpt) {
+  const progressX = UI_MARGIN_X;
+  const progressY = 32;
+  const progressW = UI_WIDTH;
+  const segmentCount = 24;
+  const segmentGap = 4;
+  const segmentW = Math.floor(
+    (progressW - segmentGap * (segmentCount - 1)) / segmentCount,
+  );
+
+  const progressSegments = Array.from({ length: segmentCount }, (_, index) => {
+    const x = progressX + index * (segmentW + segmentGap);
+    const from = parseFloat(((duration * index) / segmentCount).toFixed(2));
+    return `drawbox=x=${x}:y=${progressY}:w=${segmentW}:h=10:color=${YELLOW}@0.95:t=fill:enable='gte(t,${from})'`;
+  });
+
+  const badgeW = 328;
+  const badgeH = 62;
+  const badgeX = Math.round((TARGET_WIDTH - badgeW) / 2);
+  const badgeY = 58;
+
+  return [
+    `drawbox=x=${progressX}:y=${progressY}:w=${progressW}:h=10:color=black@0.45:t=fill`,
+    ...progressSegments,
+    `drawbox=x=${badgeX - 6}:y=${badgeY - 6}:w=${badgeW + 12}:h=${badgeH + 12}:color=black@0.88:t=fill`,
+    `drawbox=x=${badgeX}:y=${badgeY}:w=${badgeW}:h=${badgeH}:color=${YELLOW}@1:t=fill`,
+    `drawtext=${fontOpt}text='REVIEW 60S':fontsize=32:fontcolor=black:borderw=1:bordercolor=black@0.35:x=(w-tw)/2:y=${badgeY + 15}`,
+  ];
+}
+
+function buildEndCardFilters(duration, variant, productName, fontOpt) {
+  if (duration < 5) return [];
+
+  const product = shortProductName(productName).toUpperCase();
+  const start = Math.max(0, parseFloat((duration - 2.4).toFixed(2)));
+  const end = parseFloat(duration.toFixed(2));
+  const enable = `between(t,${start},${end})`;
+  const cardX = UI_MARGIN_X;
+  const cardY = variant.hookPosition === "bottom" ? 990 : 1160;
+  const cardW = UI_WIDTH;
+  const cardH = 190;
+  const ctaTemplates = [
+    "XEM GIÁ TRƯỚC KHI CHỐT",
+    "LƯU LẠI ĐỂ SO SÁNH",
+    "CHECK SIZE TRƯỚC KHI MUA",
+    "ĐỌC REVIEW RỒI HÃY CHỐT",
+  ];
+  const cta = pickRandom(ctaTemplates);
+
+  return [
+    `drawbox=x=${cardX}:y=${cardY}:w=${cardW}:h=${cardH}:color=black@0.72:t=fill:enable='${enable}'`,
+    `drawbox=x=${cardX}:y=${cardY}:w=${cardW}:h=8:color=${YELLOW}@1:t=fill:enable='${enable}'`,
+    `drawbox=x=${cardX}:y=${cardY + cardH - 8}:w=${cardW}:h=8:color=${YELLOW}@1:t=fill:enable='${enable}'`,
+    `drawtext=${fontOpt}text='${escapeDrawtext(cta)}':fontsize=42:fontcolor=${YELLOW}:borderw=4:bordercolor=black@0.9:shadowx=2:shadowy=4:shadowcolor=black@0.55:x=(w-tw)/2:y=${cardY + 34}:enable='${enable}'`,
+    `drawtext=${fontOpt}text='${escapeDrawtext(product)}':fontsize=36:fontcolor=white:borderw=3:bordercolor=black@0.9:shadowx=2:shadowy=4:shadowcolor=black@0.55:x=(w-tw)/2:y=${cardY + 102}:enable='${enable}'`,
+  ];
+}
+
 // ─── Panel background filters ──────────────────────────────────────────────────
 // Returns the array of filter strings that paint the bottom panel area.
 // Called after the video has been padded to TARGET_HEIGHT.
@@ -188,7 +388,6 @@ function buildVideoFilter(videoInfo, variant, productName) {
     speed,
     translateX,
     translateY,
-    hookText,
     hookPosition,
     hookDuration,
   } = variant;
@@ -196,7 +395,7 @@ function buildVideoFilter(videoInfo, variant, productName) {
 
   const filters = [];
 
-  // ── 1. Non-9:16 sources: scale + letterbox to video area height (1460) ──────
+  // ── 1. Non-9:16 sources: scale + letterbox to video area height ─────────────
   if (!isNineToSixteen) {
     filters.push(
       `scale=${TARGET_WIDTH}:${VIDEO_AREA_HEIGHT}:force_original_aspect_ratio=decrease`,
@@ -206,7 +405,7 @@ function buildVideoFilter(videoInfo, variant, productName) {
 
   // ── 2. Zoom: scale up then crop to 1080 × VIDEO_AREA_HEIGHT ─────────────────
   const scaledW = evenFloor(TARGET_WIDTH * zoom);
-  const scaledH = evenFloor(VIDEO_AREA_HEIGHT * zoom); // ← uses 1460, not 1920
+  const scaledH = evenFloor(VIDEO_AREA_HEIGHT * zoom);
 
   const maxTx = Math.floor((scaledW - TARGET_WIDTH) / 2);
   const maxTy = Math.floor((scaledH - VIDEO_AREA_HEIGHT) / 2);
@@ -227,7 +426,7 @@ function buildVideoFilter(videoInfo, variant, productName) {
   // ── 4. Occasional pulse zoom on the video area only ─────────────────────────
   filters.push(...buildPulseZoomFilters(variant));
 
-  // ── 5. Pad to full output height; bottom 460px becomes the panel area ────────
+  // ── 5. Pad to full output height; bottom area becomes the product panel ──────
   filters.push(`pad=${TARGET_WIDTH}:${TARGET_HEIGHT}:0:0:color=0x060D1F`);
 
   // ── 6. Paint the panel background (gradient simulation + separator) ──────────
@@ -239,28 +438,33 @@ function buildVideoFilter(videoInfo, variant, productName) {
     filters.push(`setpts=${pts}*PTS`);
   }
 
-  // ── 8. Hook text: keep INSIDE the video area (0 – VIDEO_AREA_HEIGHT) ─────────
+  // ── 8. TikTok-style badge and progress bar ───────────────────────────────────
   const fontPath = findSystemFont();
   const fontOpt = fontPath ? `fontfile=${escapeFontPath(fontPath)}:` : "";
-  // Bottom hook sits 130px above the panel, not 130px above the frame bottom
-  const hookY = hookPosition === "top" ? "60" : String(VIDEO_AREA_HEIGHT - 130);
-  const enable = `between(t,0,${hookDuration})`;
+  filters.push(...buildBadgeAndProgressFilters(duration, fontOpt));
 
+  // ── 9. Hook text: keep INSIDE the video area (0 – VIDEO_AREA_HEIGHT) ─────────
+  // Top hook sits below the badge/progress bar; bottom hook stays above the panel.
+  const hookY =
+    hookPosition === "top" ? "172" : String(VIDEO_AREA_HEIGHT - 130);
+  const hookText = buildRandomHookText(variant, productName);
   filters.push(
-    `drawtext=${fontOpt}` +
-      `text='${escapeDrawtext(hookText)}':` +
-      `fontsize=54:fontcolor=white:` +
-      `x=(w-tw)/2:y=${hookY}:` +
-      `box=1:boxcolor=black@0.60:boxborderw=18:` +
-      `shadowx=2:shadowy=2:shadowcolor=black@0.5:` +
-      `enable='${enable}'`,
+    ...buildHookFilters(hookText, Number(hookY), hookDuration, fontOpt),
   );
 
-  // ── 9. Product name in bottom panel ──────────────────────────────────────────
+  // ── 10. Caption timeline in the video area ───────────────────────────────────
+  filters.push(
+    ...buildCaptionTimelineFilters(duration, variant, productName, fontOpt),
+  );
+
+  // ── 11. End-card CTA in the final seconds ────────────────────────────────────
+  filters.push(...buildEndCardFilters(duration, variant, productName, fontOpt));
+
+  // ── 12. Product name in bottom panel ─────────────────────────────────────────
   // buildProductNameFilter returns 1 or 2 drawtext filters already joined with ','
   filters.push(buildProductNameFilter(productName, fontOpt));
 
-  // ── 10. Panel animations (shine streaks + icon badges) ───────────────────────
+  // ── 13. Panel animations (shine streaks + icon badges) ───────────────────────
   const iconFontPath = findIconFont();
   const iconFontOpt = iconFontPath
     ? `fontfile=${escapeFontPath(iconFontPath)}:`

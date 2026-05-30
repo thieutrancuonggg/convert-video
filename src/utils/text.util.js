@@ -79,7 +79,7 @@ function buildProductNameFilter(productName, fontOpt) {
   const baseOpt = `${fontOpt}fontsize=${fontSize}:fontcolor=0xFFE61F:${shadowOpt}`;
 
   const panelTop = VIDEO_AREA_HEIGHT;
-  const panelMid = panelTop + PANEL_HEIGHT / 2; // 1690
+  const panelMid = panelTop + PANEL_HEIGHT / 2;
 
   if (lines.length === 1) {
     // Single line: center using FFmpeg th expression
