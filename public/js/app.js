@@ -1,5 +1,6 @@
 document.addEventListener('DOMContentLoaded', function () {
   initUploadZone();
+  initProductNameField();
   initUploadForm();
 });
 
@@ -58,6 +59,23 @@ function showFileInfo(file, infoEl) {
   infoEl.style.display = 'flex';
 }
 
+// ─── Product name field: char counter ────────────────────────────────────────
+function initProductNameField() {
+  var input   = document.getElementById('product-name');
+  var counter = document.getElementById('char-count');
+  if (!input || !counter) return;
+
+  function update() {
+    var len = input.value.length;
+    counter.textContent = len + '/80';
+    counter.classList.toggle('near-limit', len >= 60 && len < 80);
+    counter.classList.toggle('at-limit',   len >= 80);
+  }
+
+  input.addEventListener('input', update);
+  update();
+}
+
 // ─── Upload form: loading state on submit ─────────────────────────────────────
 function initUploadForm() {
   var form    = document.getElementById('upload-form');
@@ -72,6 +90,13 @@ function initUploadForm() {
     if (!input || !input.files[0]) {
       e.preventDefault();
       alert('Vui lòng chọn file MP4 trước khi upload.');
+      return;
+    }
+    var nameInput = document.getElementById('product-name');
+    if (nameInput && !nameInput.value.trim()) {
+      e.preventDefault();
+      nameInput.focus();
+      alert('Vui lòng nhập tên sản phẩm.');
       return;
     }
     // Show loading state

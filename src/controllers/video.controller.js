@@ -7,23 +7,41 @@ const { createJob, getJob, updateJob, enqueue } = require('../jobs/render-queue'
 const { getJobOutputFile, isPathSafe } = require('../utils/path.util');
 const { outputsDir } = require('../config/storage.config');
 const { VARIANTS } = require('../constants/variant.constants');
+const { normalizeProductName } = require('../utils/text.util');
 const { logger } = require('../utils/logger.util');
 
 // POST /upload
 async function uploadAndProcess(req, res, next) {
   try {
+    // ── Validate product name ────────────────────────────────────────────────
+    const rawName = req.body.productName || '';
+    const productName = normalizeProductName(rawName);
+
+    if (!productName) {
+      return res.status(400).render('pages/error', {
+        title: 'Thiếu tên sản phẩm',
+        message: 'Vui lòng nhập tên sản phẩm trước khi upload.',
+      });
+    }
+    if (productName.length > 80) {
+      return res.status(400).render('pages/error', {
+        title: 'Tên sản phẩm quá dài',
+        message: 'Tên sản phẩm không được quá 80 ký tự.',
+      });
+    }
+
     const { jobId, inputPath, originalFilename } = await saveUploadedFile(req.file);
     const videoInfo = req.videoInfo;
     const outputDir = path.join(outputsDir, jobId);
 
-    const job = createJob({ id: jobId, originalFilename, inputPath, outputDir });
+    const job = createJob({ id: jobId, originalFilename, inputPath, outputDir, productName });
 
     if (videoInfo.warnings.length > 0) {
       updateJob(jobId, { warning: videoInfo.warnings.join(' | ') });
     }
 
     enqueue(jobId, async (jId) => {
-      const outputs = await generateVariants(jId, inputPath, videoInfo);
+      const outputs = await generateVariants(jId, inputPath, videoInfo, productName);
       updateJob(jId, { outputs });
     });
 

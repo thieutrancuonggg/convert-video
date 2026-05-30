@@ -2,6 +2,10 @@
   <div class="result-header">
     <h1>✅ Tạo xong 3 biến thể!</h1>
     <p class="text-muted">File gốc: <code><%= job.originalFilename %></code></p>
+    <div class="product-name-badge">
+      <span class="product-name-label">Tên sản phẩm</span>
+      <span class="product-name-value"><%= job.productName %></span>
+    </div>
   </div>
 
   <% if (job.warning) { %>

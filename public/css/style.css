@@ -436,6 +436,85 @@ code {
 /* ─── Utilities ───────────────────────────────────────────────────────────── */
 .text-muted { color: var(--text-muted); }
 
+/* ─── Product name field (upload form) ───────────────────────────────────── */
+.field-group { margin-top: 20px; }
+
+.field-label {
+  display: block;
+  font-size: 0.88rem;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: var(--text);
+}
+
+.required { color: var(--accent); margin-left: 2px; }
+
+.field-input {
+  width: 100%;
+  padding: 11px 14px;
+  background: var(--bg-card-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-size: 0.9rem;
+  font-family: var(--font);
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  -webkit-appearance: none;
+}
+
+.field-input::placeholder { color: var(--text-muted); }
+.field-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(254,44,85,0.12);
+}
+
+.field-hint {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin-top: 5px;
+}
+
+.char-count {
+  font-variant-numeric: tabular-nums;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  transition: color 0.15s;
+}
+
+.char-count.near-limit { color: var(--warning); }
+.char-count.at-limit   { color: var(--accent);  }
+
+/* ─── Product name badge (result page) ───────────────────────────────────── */
+.product-name-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+  background: rgba(0,82,224,0.12);
+  border: 1px solid rgba(0,82,224,0.25);
+  border-radius: 8px;
+  padding: 8px 14px;
+}
+
+.product-name-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #6ea3ff;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  white-space: nowrap;
+}
+
+.product-name-value {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
 /* ─── Responsive ──────────────────────────────────────────────────────────── */
 @media (max-width: 600px) {
   .container { padding: 20px 16px 48px; }

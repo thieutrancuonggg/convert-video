@@ -2,6 +2,10 @@ module.exports = {
   TARGET_WIDTH: 1080,
   TARGET_HEIGHT: 1920,
 
+  // Layout with bottom panel
+  VIDEO_AREA_HEIGHT: 1460, // video occupies top portion
+  PANEL_HEIGHT: 460,       // product name panel at bottom
+
   MAX_DURATION_WARN: 35, // seconds — warn but still process
 
   ALLOWED_EXTENSION: '.mp4',

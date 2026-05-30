@@ -18,6 +18,26 @@
 
       <div id="file-info" class="file-info" style="display:none"></div>
 
+      <div class="field-group">
+        <label for="product-name" class="field-label">
+          Tên sản phẩm <span class="required">*</span>
+        </label>
+        <input
+          type="text"
+          id="product-name"
+          name="productName"
+          class="field-input"
+          placeholder="Ví dụ: Máy massage chân tại chỗ"
+          maxlength="80"
+          required
+          autocomplete="off"
+        />
+        <span class="field-hint">
+          Hiển thị trong panel phía dưới video &bull; Tối đa 80 ký tự
+          <span id="char-count" class="char-count">0/80</span>
+        </span>
+      </div>
+
       <div class="upload-notes">
         <ul>
           <li>✅ Nên dùng video tỷ lệ <strong>9:16</strong> (dọc, TikTok native)</li>

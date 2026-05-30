@@ -13,8 +13,18 @@ module.exports = {
       translateX: 0,
       translateY: 0,
       hookText: 'Xem trước khi bạn mua',
-      hookPosition: 'top',   // 'top' | 'bottom'
-      hookDuration: 2,       // seconds
+      hookPosition: 'top',
+      hookDuration: 2,
+      panelAnim: {
+        shineCount: 1,
+        // icons spread across video area + panel
+        // hook is at TOP → video top-right (vtr) safe only after hookDuration
+        // startPad for icons = max(hookDuration, 3s) in practice for real videos
+        icons: [
+          { char: '★', size: 44, pos: 'vtr' }, // video area top-right
+          { char: '★', size: 40, pos: 'tr'  }, // panel top-right
+        ],
+      },
     },
     {
       id: 'v2',
@@ -31,6 +41,15 @@ module.exports = {
       hookText: 'Mình đã test thử sản phẩm này',
       hookPosition: 'bottom',
       hookDuration: 2,
+      panelAnim: {
+        shineCount: 2,
+        // hook is at BOTTOM → use video top corners (vtl/vtr) for video icons
+        icons: [
+          { char: '✓', size: 44, pos: 'vtl' }, // video area top-left
+          { char: '✓', size: 40, pos: 'tl'  }, // panel top-left
+          { char: '★', size: 36, pos: 'br'  }, // panel bottom-right
+        ],
+      },
     },
     {
       id: 'v3',
@@ -47,6 +66,15 @@ module.exports = {
       hookText: 'Có đáng mua không?',
       hookPosition: 'top',
       hookDuration: 2,
+      panelAnim: {
+        shineCount: 2,
+        // hook is at TOP → use video bottom-right (vbr) safe; top corners avoid hook
+        icons: [
+          { char: '★', size: 46, pos: 'vbr' }, // video area bottom-right (above panel)
+          { char: '◆', size: 38, pos: 'vtr' }, // video area top-right (≥160px, below hook)
+          { char: '★', size: 40, pos: 'bl'  }, // panel bottom-left
+        ],
+      },
     },
   ],
 

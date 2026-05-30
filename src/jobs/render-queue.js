@@ -7,12 +7,13 @@ const jobs = new Map();
 let activeRenders = 0;
 const pendingQueue = []; // [{ jobId, processorFn }]
 
-function createJob({ id, originalFilename, inputPath, outputDir }) {
+function createJob({ id, originalFilename, inputPath, outputDir, productName }) {
   const job = {
     id,
     originalFilename,
     inputPath,
     outputDir,
+    productName,
     status: 'pending',    // pending | processing | completed | failed
     progress: 0,
     warning: null,

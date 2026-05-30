@@ -6,7 +6,7 @@ const { getJobOutputDir } = require('../utils/path.util');
 const { updateJob } = require('../jobs/render-queue');
 const { logger } = require('../utils/logger.util');
 
-async function generateVariants(jobId, inputPath, videoInfo) {
+async function generateVariants(jobId, inputPath, videoInfo, productName) {
   const outputDir = getJobOutputDir(jobId);
   await fs.ensureDir(outputDir);
 
@@ -22,7 +22,7 @@ async function generateVariants(jobId, inputPath, videoInfo) {
 
     logger.info(`Job ${jobId}: rendering variant ${i + 1}/${total} (${variant.name})`);
 
-    await renderVariant(inputPath, outputPath, videoInfo, variant);
+    await renderVariant(inputPath, outputPath, videoInfo, variant, productName);
 
     outputs.push({
       id: variant.id,
