@@ -1,0 +1,57 @@
+<div class="page-index">
+  <div class="hero">
+    <h1 class="hero-title">Tạo 3 biến thể video TikTok Affiliate</h1>
+    <p class="hero-desc">
+      Upload video gốc (MP4, 9:16, dưới 30s) — hệ thống tự tạo 3 phiên bản mới với zoom,
+      màu sắc và hook text khác nhau để test hiệu quả affiliate.
+    </p>
+  </div>
+
+  <div class="card upload-card">
+    <form id="upload-form" action="/upload" method="POST" enctype="multipart/form-data">
+      <div id="upload-zone" class="upload-zone" role="button" tabindex="0">
+        <div class="upload-icon">🎬</div>
+        <p class="upload-primary">Kéo thả hoặc <strong>click để chọn</strong> file MP4</p>
+        <p class="upload-hint">Tối đa 200MB &bull; Chỉ nhận .mp4</p>
+        <input type="file" id="video-file" name="video" accept=".mp4,video/mp4" required />
+      </div>
+
+      <div id="file-info" class="file-info" style="display:none"></div>
+
+      <div class="upload-notes">
+        <ul>
+          <li>✅ Nên dùng video tỷ lệ <strong>9:16</strong> (dọc, TikTok native)</li>
+          <li>✅ Nên dưới <strong>30 giây</strong> để tối ưu TikTok Affiliate</li>
+          <li>✅ Hệ thống tạo <strong>3 phiên bản</strong> với zoom / màu sắc / hook text khác nhau</li>
+          <li>✅ Nội dung gốc được <strong>giữ nguyên</strong> — không crop mạnh, không che mặt / sản phẩm</li>
+        </ul>
+      </div>
+
+      <button type="submit" id="submit-btn" class="btn btn-primary btn-full">
+        <span id="btn-text">⚡ Upload &amp; Generate 3 biến thể</span>
+        <span id="btn-loading" style="display:none">⏳ Đang upload…</span>
+      </button>
+    </form>
+  </div>
+
+  <div class="variants-preview">
+    <h2 class="section-title">3 biến thể sẽ được tạo</h2>
+    <div class="variant-cards">
+      <div class="variant-card">
+        <div class="variant-badge badge-v1">V1</div>
+        <h3>Light</h3>
+        <p>Zoom 3% · Sáng +0.03 · Hook: <em>"Xem trước khi bạn mua"</em> (top)</p>
+      </div>
+      <div class="variant-card">
+        <div class="variant-badge badge-v2">V2</div>
+        <h3>Medium</h3>
+        <p>Zoom 6% · Dịch 20px · Hook: <em>"Mình đã test thử sản phẩm này"</em> (bottom)</p>
+      </div>
+      <div class="variant-card">
+        <div class="variant-badge badge-v3">V3</div>
+        <h3>Strong Safe</h3>
+        <p>Zoom 8% · Dịch dọc 20px · Hook: <em>"Có đáng mua không?"</em> (top)</p>
+      </div>
+    </div>
+  </div>
+</div>
