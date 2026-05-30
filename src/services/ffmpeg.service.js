@@ -108,6 +108,14 @@ function buildPulseZoomFilters(variant) {
   ];
 }
 
+function buildVideoOverlayFilters() {
+  return [
+    `drawbox=x=0:y=0:w=${TARGET_WIDTH}:h=${VIDEO_AREA_HEIGHT}:color=0x0A1224@0.05:t=fill`,
+    `drawbox=x=24:y=0:w=4:h=${VIDEO_AREA_HEIGHT}:color=0xFFE61F@0.42:t=fill`,
+    `drawbox=x=${TARGET_WIDTH - 28}:y=0:w=4:h=${VIDEO_AREA_HEIGHT}:color=0xFFE61F@0.42:t=fill`,
+  ];
+}
+
 function pickRandom(list) {
   return list[Math.floor(Math.random() * list.length)];
 }
@@ -404,8 +412,9 @@ function buildVideoFilter(videoInfo, variant, productName) {
   }
 
   // ── 2. Zoom: scale up then crop to 1080 × VIDEO_AREA_HEIGHT ─────────────────
-  const scaledW = evenFloor(TARGET_WIDTH * zoom);
-  const scaledH = evenFloor(VIDEO_AREA_HEIGHT * zoom);
+  const baseZoom = Math.min(zoom + 0.015, 1.1);
+  const scaledW = evenFloor(TARGET_WIDTH * baseZoom);
+  const scaledH = evenFloor(VIDEO_AREA_HEIGHT * baseZoom);
 
   const maxTx = Math.floor((scaledW - TARGET_WIDTH) / 2);
   const maxTy = Math.floor((scaledH - VIDEO_AREA_HEIGHT) / 2);
@@ -421,7 +430,10 @@ function buildVideoFilter(videoInfo, variant, productName) {
   );
 
   // ── 3. Colour grading (applied to video area only, before pad) ──────────────
-  filters.push(`eq=brightness=${brightness}:contrast=${contrast}`);
+  filters.push(
+    `eq=brightness=${(brightness + 0.01).toFixed(3)}:contrast=${(contrast + 0.04).toFixed(3)}:saturation=1.12`,
+    `colorbalance=rs=0.025:gs=0.008:bs=-0.018`,
+  );
 
   // ── 4. Occasional pulse zoom on the video area only ─────────────────────────
   filters.push(...buildPulseZoomFilters(variant));
@@ -429,21 +441,24 @@ function buildVideoFilter(videoInfo, variant, productName) {
   // ── 5. Pad to full output height; bottom area becomes the product panel ──────
   filters.push(`pad=${TARGET_WIDTH}:${TARGET_HEIGHT}:0:0:color=0x060D1F`);
 
-  // ── 6. Paint the panel background (gradient simulation + separator) ──────────
+  // ── 6. Subtle phone-screen side stripes and video overlay ────────────────────
+  filters.push(...buildVideoOverlayFilters());
+
+  // ── 7. Paint the panel background (gradient simulation + separator) ──────────
   filters.push(...buildPanelBackgroundFilters());
 
-  // ── 7. Speed ─────────────────────────────────────────────────────────────────
+  // ── 8. Speed ─────────────────────────────────────────────────────────────────
   if (speed !== 1.0) {
     const pts = (1 / speed).toFixed(6);
     filters.push(`setpts=${pts}*PTS`);
   }
 
-  // ── 8. TikTok-style badge and progress bar ───────────────────────────────────
+  // ── 9. TikTok-style badge and progress bar ───────────────────────────────────
   const fontPath = findSystemFont();
   const fontOpt = fontPath ? `fontfile=${escapeFontPath(fontPath)}:` : "";
   filters.push(...buildBadgeAndProgressFilters(duration, fontOpt));
 
-  // ── 9. Hook text: keep INSIDE the video area (0 – VIDEO_AREA_HEIGHT) ─────────
+  // ── 10. Hook text: keep INSIDE the video area (0 – VIDEO_AREA_HEIGHT) ────────
   // Top hook sits below the badge/progress bar; bottom hook stays above the panel.
   const hookY =
     hookPosition === "top" ? "172" : String(VIDEO_AREA_HEIGHT - 130);
@@ -452,19 +467,19 @@ function buildVideoFilter(videoInfo, variant, productName) {
     ...buildHookFilters(hookText, Number(hookY), hookDuration, fontOpt),
   );
 
-  // ── 10. Caption timeline in the video area ───────────────────────────────────
+  // ── 11. Caption timeline in the video area ───────────────────────────────────
   filters.push(
     ...buildCaptionTimelineFilters(duration, variant, productName, fontOpt),
   );
 
-  // ── 11. End-card CTA in the final seconds ────────────────────────────────────
+  // ── 12. End-card CTA in the final seconds ────────────────────────────────────
   filters.push(...buildEndCardFilters(duration, variant, productName, fontOpt));
 
-  // ── 12. Product name in bottom panel ─────────────────────────────────────────
+  // ── 13. Product name in bottom panel ─────────────────────────────────────────
   // buildProductNameFilter returns 1 or 2 drawtext filters already joined with ','
   filters.push(buildProductNameFilter(productName, fontOpt));
 
-  // ── 13. Panel animations (shine streaks + icon badges) ───────────────────────
+  // ── 14. Panel animations (shine streaks + icon badges) ───────────────────────
   const iconFontPath = findIconFont();
   const iconFontOpt = iconFontPath
     ? `fontfile=${escapeFontPath(iconFontPath)}:`
