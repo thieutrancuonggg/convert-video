@@ -132,6 +132,58 @@ function buildIconFilters(icons, duration, fontOpt) {
   });
 }
 
+function buildFloatingVideoIconFilters(variant, duration, fontOpt) {
+  const cfg = PANEL_ANIMATION;
+  if (!cfg.enableCuteIcons) return [];
+
+  const count = variant.panelAnim?.videoIconCount || cfg.videoIconCount || 0;
+  if (count <= 0) return [];
+
+  const iconDuration = cfg.videoIconDuration || cfg.iconDuration;
+  const iconFadeDuration = cfg.videoIconFadeDuration || cfg.iconFadeDuration;
+  const startPad = Math.min(2.6, duration * 0.18);
+  const endPad = Math.min(4.5, duration * 0.16);
+  const times = spreadTimes(count, duration, startPad, endPad);
+  const chars = ["★", "✓", "◆", "★", "✓", "•"];
+  const colors = ["white", "0xFFE61F", "0xE0F2FE", "0xFFE61F"];
+  const points = [
+    { x: 86, y: 260 },
+    { x: TARGET_WIDTH - 122, y: 300 },
+    { x: 112, y: 520 },
+    { x: TARGET_WIDTH - 138, y: 610 },
+    { x: 92, y: 850 },
+    { x: TARGET_WIDTH - 116, y: 930 },
+    { x: 142, y: VIDEO_AREA_HEIGHT - 360 },
+    { x: TARGET_WIDTH - 150, y: VIDEO_AREA_HEIGHT - 340 },
+    { x: Math.round(TARGET_WIDTH * 0.28), y: 420 },
+    { x: Math.round(TARGET_WIDTH * 0.72), y: 760 },
+    { x: Math.round(TARGET_WIDTH * 0.22), y: 1120 },
+    { x: Math.round(TARGET_WIDTH * 0.78), y: 1180 },
+  ];
+
+  return times.map((tStart, i) => {
+    const tEnd = parseFloat((tStart + iconDuration).toFixed(3));
+    const fd = iconFadeDuration;
+    const alphaExpr =
+      `if(lt(t-${tStart},${fd}),(t-${tStart})/${fd}` +
+      `,if(lt(${tEnd}-t,${fd}),(${tEnd}-t)/${fd},1))`;
+    const point = points[i % points.length];
+    const char = chars[i % chars.length];
+    const color = colors[i % colors.length];
+    const size = 28 + (i % 4) * 4;
+    const drift = i % 2 === 0 ? -18 : 18;
+    const safeChar = char.replace(/'/g, "\\'").replace(/:/g, "\\:");
+
+    return (
+      `drawtext=${fontOpt}text='${safeChar}':fontsize=${size}:fontcolor=${color}` +
+      `:x=${point.x}:y='${point.y}+${drift}*sin((t-${tStart})*PI/${iconDuration})'` +
+      `:alpha='${alphaExpr}*0.82'` +
+      `:shadowx=2:shadowy=3:shadowcolor=black@0.50` +
+      `:enable='between(t,${tStart},${tEnd})'`
+    );
+  });
+}
+
 // ─── Public API ────────────────────────────────────────────────────────────────
 
 function buildPanelAnimationFilters(variant, duration, fontOpt) {
@@ -139,6 +191,7 @@ function buildPanelAnimationFilters(variant, duration, fontOpt) {
   const { shineCount = 0, icons = [] } = variant.panelAnim;
   return [
     ...buildShineFilters(shineCount, duration),
+    ...buildFloatingVideoIconFilters(variant, duration, fontOpt),
     ...buildIconFilters(icons, duration, fontOpt),
   ];
 }
