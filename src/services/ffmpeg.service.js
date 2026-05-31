@@ -103,7 +103,7 @@ function buildPulseZoomFilters(variant) {
   const zoomExpr = `if(lt(${phase}\\,${duration})\\,1+${amount}*sin(PI*${phase}/${duration})\\,1)`;
 
   return [
-    `scale=w='trunc(${TARGET_WIDTH}*(${zoomExpr})/2)*2':h='trunc(${VIDEO_AREA_HEIGHT}*(${zoomExpr})/2)*2':eval=frame`,
+    `scale=w='trunc(${TARGET_WIDTH}*(${zoomExpr})/2)*2':h='trunc(${VIDEO_AREA_HEIGHT}*(${zoomExpr})/2)*2':eval=frame:flags=lanczos`,
     `crop=${TARGET_WIDTH}:${VIDEO_AREA_HEIGHT}:(iw-ow)/2:(ih-oh)/2`,
   ];
 }
@@ -284,7 +284,7 @@ function buildBadgeAndProgressFilters(duration, fontOpt) {
     ...progressSegments,
     `drawbox=x=${badgeX - 6}:y=${badgeY - 6}:w=${badgeW + 12}:h=${badgeH + 12}:color=black@0.88:t=fill`,
     `drawbox=x=${badgeX}:y=${badgeY}:w=${badgeW}:h=${badgeH}:color=${YELLOW}@1:t=fill`,
-    `drawtext=${fontOpt}text='Táo Thời Trang':fontsize=32:fontcolor=black:borderw=1:bordercolor=black@0.35:x=(w-tw)/2:y=${badgeY + 15}`,
+    `drawtext=${fontOpt}text='@depgaikhongkieu':fontsize=32:fontcolor=black:borderw=1:bordercolor=black@0.35:x=(w-tw)/2:y=${badgeY + 15}`,
   ];
 }
 
@@ -406,7 +406,7 @@ function buildVideoFilter(videoInfo, variant, productName) {
   // ── 1. Non-9:16 sources: scale + letterbox to video area height ─────────────
   if (!isNineToSixteen) {
     filters.push(
-      `scale=${TARGET_WIDTH}:${VIDEO_AREA_HEIGHT}:force_original_aspect_ratio=decrease`,
+      `scale=${TARGET_WIDTH}:${VIDEO_AREA_HEIGHT}:force_original_aspect_ratio=decrease:flags=lanczos`,
       `pad=${TARGET_WIDTH}:${VIDEO_AREA_HEIGHT}:(ow-iw)/2:(oh-ih)/2:black`,
     );
   }
@@ -425,7 +425,7 @@ function buildVideoFilter(videoInfo, variant, productName) {
   const cropY = Math.round((scaledH - VIDEO_AREA_HEIGHT) / 2 + safeTy);
 
   filters.push(
-    `scale=${scaledW}:${scaledH}`,
+    `scale=${scaledW}:${scaledH}:flags=lanczos`,
     `crop=${TARGET_WIDTH}:${VIDEO_AREA_HEIGHT}:${cropX}:${cropY}`,
   );
 
@@ -433,6 +433,7 @@ function buildVideoFilter(videoInfo, variant, productName) {
   filters.push(
     `eq=brightness=${(brightness + 0.01).toFixed(3)}:contrast=${(contrast + 0.04).toFixed(3)}:saturation=1.12`,
     `colorbalance=rs=0.025:gs=0.008:bs=-0.018`,
+    `unsharp=lx=5:ly=5:la=0.6:cx=3:cy=3:ca=0.0`,
   );
 
   // ── 4. Occasional pulse zoom on the video area only ─────────────────────────
