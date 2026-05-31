@@ -116,6 +116,20 @@ function buildVideoOverlayFilters() {
   ];
 }
 
+function buildInitialVideoAreaFilters(videoInfo) {
+  if (!videoInfo.isNineToSixteen) {
+    return [
+      `scale=${TARGET_WIDTH}:${VIDEO_AREA_HEIGHT}:force_original_aspect_ratio=decrease:flags=lanczos`,
+      `pad=${TARGET_WIDTH}:${VIDEO_AREA_HEIGHT}:(ow-iw)/2:(oh-ih)/2:black`,
+    ];
+  }
+
+  return [
+    `scale=${TARGET_WIDTH}:-2:flags=lanczos`,
+    `crop=${TARGET_WIDTH}:${VIDEO_AREA_HEIGHT}:(iw-ow)/2:(ih-oh)/2`,
+  ];
+}
+
 function pickRandom(list) {
   return list[Math.floor(Math.random() * list.length)];
 }
@@ -399,17 +413,15 @@ function buildVideoFilter(videoInfo, variant, productName) {
     hookPosition,
     hookDuration,
   } = variant;
-  const { isNineToSixteen } = videoInfo;
-
   const filters = [];
 
-  // ── 1. Non-9:16 sources: scale + letterbox to video area height ─────────────
-  if (!isNineToSixteen) {
-    filters.push(
-      `scale=${TARGET_WIDTH}:${VIDEO_AREA_HEIGHT}:force_original_aspect_ratio=decrease:flags=lanczos`,
-      `pad=${TARGET_WIDTH}:${VIDEO_AREA_HEIGHT}:(ow-iw)/2:(oh-ih)/2:black`,
-    );
-  }
+  // Convert to YUV 4:4:4 immediately so every subsequent filter (scale,
+  // drawbox, drawtext, colorbalance) operates at full chroma resolution.
+  // The encoder converts back to 4:2:0 at the very end via -pix_fmt yuv420p.
+  filters.push("format=yuv444p");
+
+  // ── 1. Normalize into the top video area before variant zoom/crop ───────────
+  filters.push(...buildInitialVideoAreaFilters(videoInfo));
 
   // ── 2. Zoom: scale up then crop to 1080 × VIDEO_AREA_HEIGHT ─────────────────
   const baseZoom = Math.min(zoom + 0.015, 1.1);
@@ -433,7 +445,7 @@ function buildVideoFilter(videoInfo, variant, productName) {
   filters.push(
     `eq=brightness=${(brightness + 0.01).toFixed(3)}:contrast=${(contrast + 0.04).toFixed(3)}:saturation=1.12`,
     `colorbalance=rs=0.025:gs=0.008:bs=-0.018`,
-    `unsharp=lx=5:ly=5:la=0.6:cx=3:cy=3:ca=0.0`,
+    `unsharp=lx=5:ly=5:la=0.8:cx=3:cy=3:ca=0.0`,
   );
 
   // ── 4. Occasional pulse zoom on the video area only ─────────────────────────
