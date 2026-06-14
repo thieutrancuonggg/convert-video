@@ -1,7 +1,7 @@
-# TikTok Affiliate Video Variation Tool
+# TikTok Affiliate Video Tool
 
-Phần mềm local bằng Node.js để tự động tạo **3 biến thể video TikTok Affiliate** từ một video gốc.
-Mỗi biến thể có thay đổi nhẹ về zoom, màu sắc, tốc độ và hook text — giữ nguyên nội dung bán hàng, sản phẩm và người nói.
+Phần mềm local bằng Node.js để tự động tạo **một video TikTok Affiliate hoàn chỉnh** từ video gốc.
+Video đầu ra được tối ưu khung hình, màu sắc, hook text và panel sản phẩm — giữ nguyên nội dung bán hàng, sản phẩm và người nói.
 
 ---
 
@@ -141,21 +141,17 @@ video-affiliate-tool/
 | GET    | `/jobs/:jobId/status`        | JSON trạng thái job           |
 | GET    | `/result/:jobId`             | Trang kết quả                 |
 | GET    | `/preview/:jobId/:filename`  | Stream video inline (preview) |
-| GET    | `/download/:jobId/zip`       | Tải ZIP tất cả biến thể       |
 | GET    | `/download/:jobId/:filename` | Tải từng file video           |
 | GET    | `/health`                    | Health check                  |
 
 ---
 
-## 3 biến thể mặc định
+## Video đầu ra
 
-| Biến thể       | Zoom  | Sáng  | Tương phản | Tốc độ | Hook text                        | Vị trí |
-|----------------|-------|-------|------------|--------|----------------------------------|--------|
-| V1 Light       | 1.03× | +0.03 | 1.03       | 1.00×  | "Xem trước khi bạn mua"          | Top    |
-| V2 Medium      | 1.06× | +0.04 | 1.05       | 1.01×  | "Mình đã test thử sản phẩm này"  | Bottom |
-| V3 Strong Safe | 1.08× | +0.02 | 1.08       | 0.99×  | "Có đáng mua không?"             | Top    |
+Hệ thống tạo một file `video_output.mp4` với zoom nhẹ, tăng màu sắc, hook text,
+caption, CTA và panel tên sản phẩm. Âm thanh gốc được loại bỏ khỏi video đầu ra.
 
-**Giới hạn an toàn áp dụng cho tất cả biến thể:**
+**Giới hạn an toàn áp dụng cho video đầu ra:**
 - Zoom tối đa 1.08× — không crop sâu vào vùng trung tâm
 - Translate tối đa 30px — không che mặt / sản phẩm
 - Hook text chỉ hiển thị 2 giây đầu, đặt ở safe zone với nền mờ

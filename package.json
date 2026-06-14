@@ -1,7 +1,7 @@
 {
   "name": "video-affiliate-tool",
   "version": "1.0.0",
-  "description": "TikTok Affiliate Video Variation Tool - tạo 3 biến thể video từ video gốc",
+  "description": "TikTok Affiliate Video Tool - tạo một video hoàn chỉnh từ video gốc",
   "main": "src/server.js",
   "scripts": {
     "start": "node src/server.js",

@@ -2,7 +2,6 @@ const path = require('path');
 const fs = require('fs-extra');
 const { saveUploadedFile } = require('../services/upload.service');
 const { generateVariants } = require('../services/variant.service');
-const { streamZipToResponse } = require('../services/zip.service');
 const { createJob, getJob, updateJob, enqueue } = require('../jobs/render-queue');
 const { getJobOutputFile, isPathSafe } = require('../utils/path.util');
 const { outputsDir } = require('../config/storage.config');
@@ -130,23 +129,6 @@ async function previewFile(req, res, next) {
   }
 }
 
-// GET /download/:jobId/zip
-async function downloadZip(req, res, next) {
-  try {
-    const { jobId } = req.params;
-    if (!isValidJobId(jobId)) return res.status(400).end();
-
-    const job = getJob(jobId);
-    if (!job || job.status !== 'completed') {
-      return res.status(404).json({ message: 'Job not found or not completed' });
-    }
-
-    streamZipToResponse(res, jobId);
-  } catch (err) {
-    next(err);
-  }
-}
-
 // GET /download/:jobId/:filename
 async function downloadFile(req, res, next) {
   try {
@@ -186,7 +168,6 @@ module.exports = {
   getJobStatus,
   showResult,
   previewFile,
-  downloadZip,
   downloadFile,
   healthCheck,
 };

@@ -44,8 +44,6 @@ module.exports = {
     "-level 4.1",
     "-tune film",
     "-x264-params ref=6:bframes=5:b-adapt=2:direct=auto:me=umh:subme=9:trellis=2:rc-lookahead=60:deblock=-1,-1",
-    "-c:a aac",
-    "-b:a 192k",
     "-pix_fmt yuv420p",
     "-movflags +faststart",
   ],

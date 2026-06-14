@@ -8,13 +8,12 @@ const {
   getJobStatus,
   showResult,
   previewFile,
-  downloadZip,   // must come before downloadFile to avoid :filename catching 'zip'
   downloadFile,
   healthCheck,
 } = require('../controllers/video.controller');
 
 router.get('/', (_req, res) => {
-  res.render('pages/index', { title: 'TikTok Affiliate Video Variation Tool' });
+  res.render('pages/index', { title: 'TikTok Affiliate Video Tool' });
 });
 
 router.post('/upload', upload.single('video'), validateVideo, uploadAndProcess);
@@ -28,8 +27,6 @@ router.get('/result/:jobId', showResult);
 // Inline preview for <video> tag — before download routes
 router.get('/preview/:jobId/:filename', previewFile);
 
-// ZIP must be before :filename so 'zip' isn't captured as a filename
-router.get('/download/:jobId/zip', downloadZip);
 router.get('/download/:jobId/:filename', downloadFile);
 
 router.get('/health', healthCheck);

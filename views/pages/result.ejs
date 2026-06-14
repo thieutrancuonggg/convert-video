@@ -1,6 +1,6 @@
 <div class="page-result">
   <div class="result-header">
-    <h1>✅ Tạo xong 3 biến thể!</h1>
+    <h1>✅ Video đã hoàn thành!</h1>
     <p class="text-muted">File gốc: <code><%= job.originalFilename %></code></p>
     <div class="product-name-badge">
       <span class="product-name-label">Tên sản phẩm</span>
@@ -14,9 +14,9 @@
   </div>
   <% } %>
 
-  <!-- Video grid -->
+  <!-- Output video -->
   <div class="video-grid">
-    <% job.outputs.forEach(function(output, i) { %>
+    <% job.outputs.forEach(function(output) { %>
     <div class="video-card">
       <div class="video-wrap">
         <video
@@ -27,7 +27,7 @@
         ></video>
       </div>
       <div class="video-info">
-        <div class="video-badge badge-v<%= i+1 %>"><%= output.label %></div>
+        <div class="video-badge badge-v1"><%= output.label %></div>
         <p class="video-desc"><%= output.description %></p>
         <a
           href="/download/<%= jobId %>/<%= output.filename %>"
@@ -43,9 +43,6 @@
 
   <!-- Action bar -->
   <div class="result-actions">
-    <a href="/download/<%= jobId %>/zip" class="btn btn-primary">
-      📦 Tải tất cả (ZIP)
-    </a>
     <a href="/" class="btn btn-secondary">
       ↩ Tạo video khác
     </a>

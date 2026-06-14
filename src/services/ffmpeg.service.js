@@ -502,33 +502,16 @@ function buildVideoFilter(videoInfo, variant, productName) {
   return filters.join(",");
 }
 
-// ─── Audio filter ─────────────────────────────────────────────────────────────
-function buildAudioFilter(variant) {
-  if (variant.speed === 1.0) return null;
-  return `atempo=${variant.speed.toFixed(4)}`;
-}
-
 // ─── Main render entry point ───────────────────────────────────────────────────
 function renderVariant(inputPath, outputPath, videoInfo, variant, productName) {
   return new Promise((resolve, reject) => {
     const vf = buildVideoFilter(videoInfo, variant, productName);
-    const af = buildAudioFilter(variant);
 
     logger.debug(`[${variant.filename}] vf: ${vf.substring(0, 160)}…`);
 
-    const cmd = ffmpeg(inputPath).videoFilter(vf);
-
-    if (videoInfo.hasAudio) {
-      if (af) cmd.audioFilter(af);
-      cmd.outputOptions([...encodeOptions]);
-    } else {
-      cmd.outputOptions([
-        ...encodeOptions.filter(
-          (o) => !o.startsWith("-c:a") && !o.startsWith("-b:a"),
-        ),
-        "-an",
-      ]);
-    }
+    const cmd = ffmpeg(inputPath)
+      .videoFilter(vf)
+      .outputOptions([...encodeOptions, "-an"]);
 
     cmd
       .output(outputPath)
