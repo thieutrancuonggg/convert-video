@@ -298,7 +298,7 @@ function buildBadgeAndProgressFilters(duration, fontOpt) {
     ...progressSegments,
     `drawbox=x=${badgeX - 6}:y=${badgeY - 6}:w=${badgeW + 12}:h=${badgeH + 12}:color=black@0.88:t=fill`,
     `drawbox=x=${badgeX}:y=${badgeY}:w=${badgeW}:h=${badgeH}:color=${YELLOW}@1:t=fill`,
-    `drawtext=${fontOpt}text='@depgaikhongkieu':fontsize=32:fontcolor=black:borderw=1:bordercolor=black@0.35:x=(w-tw)/2:y=${badgeY + 15}`,
+    `drawtext=${fontOpt}text='@camdaydo':fontsize=32:fontcolor=black:borderw=1:bordercolor=black@0.35:x=(w-tw)/2:y=${badgeY + 15}`,
   ];
 }
 
