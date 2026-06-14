@@ -2,7 +2,6 @@ const {
   VIDEO_AREA_HEIGHT,
   PANEL_HEIGHT,
   TARGET_WIDTH,
-  TARGET_HEIGHT,
 } = require("../constants/video.constants");
 const { PANEL_ANIMATION } = require("../constants/animation.constants");
 
@@ -47,52 +46,6 @@ function iconAnchor(pos) {
   };
 
   return anchors[pos] || anchors.tr;
-}
-
-// ─── Shine filters ─────────────────────────────────────────────────────────────
-//
-// drawbox x/y are init-only — not per-frame.  We simulate a left-to-right sweep
-// using STRIP_COUNT static vertical boxes at staggered enable windows.
-// Shine now covers the FULL FRAME height (video + panel) for a cohesive look.
-
-const STRIP_COUNT = 12;
-const STRIP_OVERLAP = 2.0; // heavy overlap → softer strip boundaries
-
-function buildShineFilters(shineCount, duration) {
-  const cfg = PANEL_ANIMATION;
-  if (!cfg.enablePanelAnimation || shineCount <= 0) return [];
-
-  const { shineDuration, shineOpacity } = cfg;
-  const step = shineDuration / STRIP_COUNT;
-  const stripW = Math.round((TARGET_WIDTH / STRIP_COUNT) * STRIP_OVERLAP);
-  const stripDur = step * 2.5;
-
-  const startPad = Math.min(6, duration * 0.15);
-  const endPad = Math.min(6, duration * 0.15);
-
-  return spreadTimes(shineCount, duration, startPad, endPad).flatMap(
-    (tBase) => {
-      const filters = [];
-      for (let i = 0; i < STRIP_COUNT; i++) {
-        const stripX = Math.round(i * (TARGET_WIDTH / STRIP_COUNT));
-        const stripStart = parseFloat((tBase + i * step).toFixed(3));
-        const stripEnd = parseFloat((stripStart + stripDur).toFixed(3));
-
-        // Edge strips are dimmer; centre strips peak at full opacity
-        const isMid =
-          i >= Math.floor(STRIP_COUNT * 0.2) &&
-          i < Math.ceil(STRIP_COUNT * 0.8);
-        const alpha = (isMid ? shineOpacity : shineOpacity * 0.5).toFixed(3);
-
-        filters.push(
-          // Full frame height — covers video area AND panel together
-          `drawbox=x=${stripX}:y=0:w=${stripW}:h=${TARGET_HEIGHT}` +
-            `:color=white@${alpha}:t=fill:enable='between(t,${stripStart},${stripEnd})'`,
-        );
-      }
-      return filters;
-    },
-  );
 }
 
 // ─── Icon filters ──────────────────────────────────────────────────────────────
@@ -188,9 +141,8 @@ function buildFloatingVideoIconFilters(variant, duration, fontOpt) {
 
 function buildPanelAnimationFilters(variant, duration, fontOpt) {
   if (!variant.panelAnim) return [];
-  const { shineCount = 0, icons = [] } = variant.panelAnim;
+  const { icons = [] } = variant.panelAnim;
   return [
-    ...buildShineFilters(shineCount, duration),
     ...buildFloatingVideoIconFilters(variant, duration, fontOpt),
     ...buildIconFilters(icons, duration, fontOpt),
   ];

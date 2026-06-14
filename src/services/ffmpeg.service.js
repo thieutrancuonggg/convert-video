@@ -492,7 +492,7 @@ function buildVideoFilter(videoInfo, variant, productName) {
   // buildProductNameFilter returns 1 or 2 drawtext filters already joined with ','
   filters.push(buildProductNameFilter(productName, fontOpt));
 
-  // ── 14. Panel animations (shine streaks + icon badges) ───────────────────────
+  // ── 14. Panel and video icon animations ──────────────────────────────────────
   const iconFontPath = findIconFont();
   const iconFontOpt = iconFontPath
     ? `fontfile=${escapeFontPath(iconFontPath)}:`

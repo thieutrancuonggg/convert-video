@@ -16,7 +16,6 @@ module.exports = {
       hookPosition: 'top',
       hookDuration: 2,
       panelAnim: {
-        shineCount: 1,
         // icons spread across video area + panel
         // hook is at TOP → video top-right (vtr) safe only after hookDuration
         // startPad for icons = max(hookDuration, 3s) in practice for real videos
