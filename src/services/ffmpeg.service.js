@@ -401,8 +401,9 @@ function buildPanelBackgroundFilters() {
 }
 
 // ─── Main video filter builder ─────────────────────────────────────────────────
-function buildVideoFilter(videoInfo, variant, productName) {
-  const duration = videoInfo.duration || 30;
+function buildVideoFilter(videoInfo, variant, productName, hookSegment) {
+  const duration =
+    (videoInfo.duration || 30) + (hookSegment ? hookSegment.duration : 0);
   const {
     zoom,
     brightness,
@@ -503,15 +504,46 @@ function buildVideoFilter(videoInfo, variant, productName) {
 }
 
 // ─── Main render entry point ───────────────────────────────────────────────────
-function renderVariant(inputPath, outputPath, videoInfo, variant, productName) {
+function renderVariant(
+  inputPath,
+  outputPath,
+  videoInfo,
+  variant,
+  productName,
+  hookSegment,
+) {
   return new Promise((resolve, reject) => {
-    const vf = buildVideoFilter(videoInfo, variant, productName);
+    const vf = buildVideoFilter(
+      videoInfo,
+      variant,
+      productName,
+      hookSegment,
+    );
 
     logger.debug(`[${variant.filename}] vf: ${vf.substring(0, 160)}…`);
 
-    const cmd = ffmpeg(inputPath)
-      .videoFilter(vf)
-      .outputOptions([...encodeOptions, "-an"]);
+    const cmd = ffmpeg(inputPath);
+
+    if (hookSegment) {
+      const start = hookSegment.start.toFixed(3);
+      const duration = hookSegment.duration.toFixed(3);
+      const graph =
+        `[0:v]split=2[hook_source][main_source];` +
+        `[hook_source]trim=start=${start}:duration=${duration},` +
+        `setpts=PTS-STARTPTS[hook];` +
+        `[main_source]setpts=PTS-STARTPTS[main];` +
+        `[hook][main]concat=n=2:v=1:a=0[sequenced];` +
+        `[sequenced]${vf}[video]`;
+
+      cmd.complexFilter(graph, "video");
+      logger.info(
+        `Hook segment: ${start}s–${(hookSegment.start + hookSegment.duration).toFixed(3)}s`,
+      );
+    } else {
+      cmd.videoFilter(vf);
+    }
+
+    cmd.outputOptions([...encodeOptions, "-an"]);
 
     cmd
       .output(outputPath)

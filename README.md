@@ -150,6 +150,8 @@ video-affiliate-tool/
 
 Hệ thống tạo một file `video_output.mp4` với zoom nhẹ, tăng màu sắc, hook text,
 caption, CTA và panel tên sản phẩm. Âm thanh gốc được loại bỏ khỏi video đầu ra.
+Một cảnh nổi bật trong phần giữa video được tự động chọn và đưa lên đầu làm hook
+chuyển động khoảng 1,5 giây.
 
 **Giới hạn an toàn áp dụng cho video đầu ra:**
 - Zoom tối đa 1.08× — không crop sâu vào vùng trung tâm

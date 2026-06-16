@@ -2,6 +2,7 @@ const path = require('path');
 const fs = require('fs-extra');
 const { VARIANTS } = require('../constants/variant.constants');
 const { renderVariant } = require('./ffmpeg.service');
+const { findHookSegment } = require('./video-analysis.service');
 const { getJobOutputDir } = require('../utils/path.util');
 const { updateJob } = require('../jobs/render-queue');
 const { logger } = require('../utils/logger.util');
@@ -9,6 +10,7 @@ const { logger } = require('../utils/logger.util');
 async function generateVariants(jobId, inputPath, videoInfo, productName) {
   const outputDir = getJobOutputDir(jobId);
   await fs.ensureDir(outputDir);
+  const hookSegment = await findHookSegment(inputPath, videoInfo.duration);
 
   const outputs = [];
   const total = VARIANTS.length;
@@ -22,7 +24,14 @@ async function generateVariants(jobId, inputPath, videoInfo, productName) {
 
     logger.info(`Job ${jobId}: rendering variant ${i + 1}/${total} (${variant.name})`);
 
-    await renderVariant(inputPath, outputPath, videoInfo, variant, productName);
+    await renderVariant(
+      inputPath,
+      outputPath,
+      videoInfo,
+      variant,
+      productName,
+      hookSegment,
+    );
 
     outputs.push({
       id: variant.id,

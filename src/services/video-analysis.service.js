@@ -2,6 +2,8 @@
 require("../config/ffmpeg.config");
 
 const ffmpeg = require("fluent-ffmpeg");
+const { spawn } = require("child_process");
+const { ffmpegPath } = require("../config/ffmpeg.config");
 const {
   TARGET_WIDTH,
   TARGET_HEIGHT,
@@ -68,4 +70,79 @@ function analyzeVideo(filePath) {
   });
 }
 
-module.exports = { analyzeVideo };
+function findHookSegment(filePath, duration, hookDuration = 1.5) {
+  if (duration <= hookDuration + 1) {
+    return Promise.resolve(null);
+  }
+
+  const scanStart = Math.max(1, duration * 0.25);
+  const scanEnd = Math.min(duration - hookDuration, duration * 0.8);
+
+  if (scanEnd - scanStart <= 0.5) {
+    return Promise.resolve({
+      start: Math.max(0, (duration - hookDuration) / 2),
+      duration: hookDuration,
+      score: null,
+    });
+  }
+
+  return new Promise((resolve) => {
+    const args = [
+      "-hide_banner",
+      "-loglevel",
+      "info",
+      "-i",
+      filePath,
+      "-vf",
+      `select='between(t\\,${scanStart.toFixed(3)}\\,${scanEnd.toFixed(3)})*gt(scene\\,0.08)',metadata=print:key=lavfi.scene_score`,
+      "-an",
+      "-f",
+      "null",
+      "-",
+    ];
+    const child = spawn(ffmpegPath, args, { stdio: ["ignore", "ignore", "pipe"] });
+    let stderr = "";
+
+    child.stderr.on("data", (chunk) => {
+      stderr += chunk.toString();
+    });
+
+    child.on("error", () => {
+      resolve(null);
+    });
+
+    child.on("close", () => {
+      const matches = [
+        ...stderr.matchAll(
+          /pts_time:([0-9.]+)[\s\S]*?lavfi\.scene_score=([0-9.]+)/g,
+        ),
+      ];
+
+      const candidates = matches
+        .map((match) => ({
+          start: parseFloat(match[1]),
+          score: parseFloat(match[2]),
+        }))
+        .filter(
+          ({ start, score }) =>
+            Number.isFinite(start) &&
+            Number.isFinite(score) &&
+            start + hookDuration <= duration,
+        );
+
+      const best = candidates.sort((a, b) => b.score - a.score)[0];
+      const fallbackStart = Math.min(
+        duration - hookDuration,
+        Math.max(1, duration * 0.55),
+      );
+
+      resolve({
+        start: best ? best.start : fallbackStart,
+        duration: hookDuration,
+        score: best ? best.score : null,
+      });
+    });
+  });
+}
+
+module.exports = { analyzeVideo, findHookSegment };
