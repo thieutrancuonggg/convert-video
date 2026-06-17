@@ -5,7 +5,6 @@ const { generateVariants } = require('../services/variant.service');
 const { createJob, getJob, updateJob, enqueue } = require('../jobs/render-queue');
 const { getJobOutputFile, isPathSafe } = require('../utils/path.util');
 const { outputsDir } = require('../config/storage.config');
-const { VARIANTS } = require('../constants/variant.constants');
 const { normalizeProductName } = require('../utils/text.util');
 const { logger } = require('../utils/logger.util');
 
@@ -113,8 +112,9 @@ async function previewFile(req, res, next) {
     if (!isValidJobId(jobId)) return res.status(400).end();
 
     const safeName = path.basename(filename);
-    const allowed = VARIANTS.map((v) => v.filename);
-    if (!allowed.includes(safeName)) return res.status(403).end();
+    const job = getJob(jobId);
+    if (!job) return res.status(404).end();
+    if (!isJobOutput(job, safeName)) return res.status(403).end();
 
     const filePath = getJobOutputFile(jobId, safeName);
     if (!isPathSafe(filePath, outputsDir)) return res.status(403).end();
@@ -136,8 +136,9 @@ async function downloadFile(req, res, next) {
     if (!isValidJobId(jobId)) return res.status(400).end();
 
     const safeName = path.basename(filename);
-    const allowed = VARIANTS.map((v) => v.filename);
-    if (!allowed.includes(safeName)) return res.status(403).end();
+    const job = getJob(jobId);
+    if (!job) return res.status(404).end();
+    if (!isJobOutput(job, safeName)) return res.status(403).end();
 
     const filePath = getJobOutputFile(jobId, safeName);
     if (!isPathSafe(filePath, outputsDir)) return res.status(403).end();
@@ -160,6 +161,10 @@ function healthCheck(_req, res) {
 function isValidJobId(id) {
   // UUID v4 format
   return /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id);
+}
+
+function isJobOutput(job, filename) {
+  return job.outputs.some((output) => output.filename === filename);
 }
 
 module.exports = {

@@ -1,4 +1,5 @@
 const path = require('path');
+const crypto = require('crypto');
 const fs = require('fs-extra');
 const { VARIANTS } = require('../constants/variant.constants');
 const { renderVariant } = require('./ffmpeg.service');
@@ -17,7 +18,9 @@ async function generateVariants(jobId, inputPath, videoInfo, productName) {
 
   for (let i = 0; i < total; i++) {
     const variant = VARIANTS[i];
-    const outputPath = path.join(outputDir, variant.filename);
+    const outputFilename = createRandomOutputFilename();
+    const outputPath = path.join(outputDir, outputFilename);
+    const renderVariantMeta = { ...variant, filename: outputFilename };
 
     // Report progress before each render (~0 → 90%)
     updateJob(jobId, { progress: Math.round((i / total) * 90) });
@@ -28,7 +31,7 @@ async function generateVariants(jobId, inputPath, videoInfo, productName) {
       inputPath,
       outputPath,
       videoInfo,
-      variant,
+      renderVariantMeta,
       productName,
       hookSegment,
     );
@@ -38,7 +41,7 @@ async function generateVariants(jobId, inputPath, videoInfo, productName) {
       name: variant.name,
       label: variant.label,
       description: variant.description,
-      filename: variant.filename,
+      filename: outputFilename,
     });
 
     updateJob(jobId, {
@@ -48,6 +51,10 @@ async function generateVariants(jobId, inputPath, videoInfo, productName) {
   }
 
   return outputs;
+}
+
+function createRandomOutputFilename() {
+  return `${crypto.randomUUID()}.mp4`;
 }
 
 module.exports = { generateVariants };

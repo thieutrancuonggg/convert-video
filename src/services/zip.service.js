@@ -1,9 +1,7 @@
 const archiver = require('archiver');
-const fs = require('fs-extra');
-const path = require('path');
 const { ZIP_FILENAME } = require('../constants/variant.constants');
-const { getJobOutputDir, getJobOutputFile } = require('../utils/path.util');
-const { VARIANTS } = require('../constants/variant.constants');
+const { getJobOutputFile } = require('../utils/path.util');
+const { getJob } = require('../jobs/render-queue');
 const { logger } = require('../utils/logger.util');
 
 // Stream all variant files directly into the response — never loads full video into RAM
@@ -23,9 +21,12 @@ function streamZipToResponse(res, jobId) {
 
   archive.pipe(res);
 
-  for (const variant of VARIANTS) {
-    const filePath = getJobOutputFile(jobId, variant.filename);
-    archive.file(filePath, { name: variant.filename });
+  const job = getJob(jobId);
+  const outputs = job ? job.outputs : [];
+
+  for (const output of outputs) {
+    const filePath = getJobOutputFile(jobId, output.filename);
+    archive.file(filePath, { name: output.filename });
   }
 
   archive.finalize();

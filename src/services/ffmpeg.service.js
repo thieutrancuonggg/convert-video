@@ -109,11 +109,7 @@ function buildPulseZoomFilters(variant) {
 }
 
 function buildVideoOverlayFilters() {
-  return [
-    `drawbox=x=0:y=0:w=${TARGET_WIDTH}:h=${VIDEO_AREA_HEIGHT}:color=0x0A1224@0.05:t=fill`,
-    `drawbox=x=24:y=0:w=4:h=${VIDEO_AREA_HEIGHT}:color=0xFFE61F@0.42:t=fill`,
-    `drawbox=x=${TARGET_WIDTH - 28}:y=0:w=4:h=${VIDEO_AREA_HEIGHT}:color=0xFFE61F@0.42:t=fill`,
-  ];
+  return [];
 }
 
 function buildInitialVideoAreaFilters(videoInfo) {
@@ -404,20 +400,12 @@ function buildPanelBackgroundFilters() {
 function buildVideoFilter(videoInfo, variant, productName, hookSegment) {
   const duration =
     (videoInfo.duration || 30) + (hookSegment ? hookSegment.duration : 0);
-  const {
-    zoom,
-    brightness,
-    contrast,
-    speed,
-    translateX,
-    translateY,
-    hookPosition,
-    hookDuration,
-  } = variant;
+  const { zoom, speed, translateX, translateY, hookPosition, hookDuration } =
+    variant;
   const filters = [];
 
   // Convert to YUV 4:4:4 immediately so every subsequent filter (scale,
-  // drawbox, drawtext, colorbalance) operates at full chroma resolution.
+  // drawbox, drawtext) operates at full chroma resolution.
   // The encoder converts back to 4:2:0 at the very end via -pix_fmt yuv420p.
   filters.push("format=yuv444p");
 
@@ -442,26 +430,19 @@ function buildVideoFilter(videoInfo, variant, productName, hookSegment) {
     `crop=${TARGET_WIDTH}:${VIDEO_AREA_HEIGHT}:${cropX}:${cropY}`,
   );
 
-  // ── 3. Colour grading (applied to video area only, before pad) ──────────────
-  filters.push(
-    `eq=brightness=${(brightness + 0.01).toFixed(3)}:contrast=${(contrast + 0.04).toFixed(3)}:saturation=1.12`,
-    `colorbalance=rs=0.025:gs=0.008:bs=-0.018`,
-    `unsharp=lx=5:ly=5:la=0.8:cx=3:cy=3:ca=0.0`,
-  );
-
-  // ── 4. Occasional pulse zoom on the video area only ─────────────────────────
+  // ── 3. Occasional pulse zoom on the video area only ─────────────────────────
   filters.push(...buildPulseZoomFilters(variant));
 
-  // ── 5. Pad to full output height; bottom area becomes the product panel ──────
+  // ── 4. Pad to full output height; bottom area becomes the product panel ──────
   filters.push(`pad=${TARGET_WIDTH}:${TARGET_HEIGHT}:0:0:color=0x060D1F`);
 
-  // ── 6. Subtle phone-screen side stripes and video overlay ────────────────────
+  // ── 5. Video overlay ─────────────────────────────────────────────────────────
   filters.push(...buildVideoOverlayFilters());
 
-  // ── 7. Paint the panel background (gradient simulation + separator) ──────────
+  // ── 6. Paint the panel background (gradient simulation + separator) ──────────
   filters.push(...buildPanelBackgroundFilters());
 
-  // ── 8. Speed ─────────────────────────────────────────────────────────────────
+  // ── 7. Speed ─────────────────────────────────────────────────────────────────
   if (speed !== 1.0) {
     const pts = (1 / speed).toFixed(6);
     filters.push(`setpts=${pts}*PTS`);
@@ -513,12 +494,7 @@ function renderVariant(
   hookSegment,
 ) {
   return new Promise((resolve, reject) => {
-    const vf = buildVideoFilter(
-      videoInfo,
-      variant,
-      productName,
-      hookSegment,
-    );
+    const vf = buildVideoFilter(videoInfo, variant, productName, hookSegment);
 
     logger.debug(`[${variant.filename}] vf: ${vf.substring(0, 160)}…`);
 
